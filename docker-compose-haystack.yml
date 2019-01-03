@@ -1,0 +1,11 @@
+---
+version: '3'
+services:
+  pitchfork:
+    image: hotelsdotcom/pitchfork:1.5
+    ports:
+      - 28080:8080
+    environment:
+      - PITCHFORK_FORWARDERS_ZIPKIN_HTTP_ENABLED=true
+      - PITCHFORK_FORWARDERS_ZIPKIN_HTTP_ENDPOINT=http://zipkin:9411/api/v2/spans
+  # add haystack ui

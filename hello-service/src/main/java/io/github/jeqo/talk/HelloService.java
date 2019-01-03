@@ -5,16 +5,18 @@ import brave.http.HttpTracing;
 import brave.httpclient.TracingHttpClientBuilder;
 import brave.jersey.server.TracingApplicationEventListener;
 import brave.sampler.Sampler;
+import com.typesafe.config.ConfigFactory;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.github.jeqo.poc.tracing.TracingHelper;
 import org.apache.http.client.HttpClient;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import zipkin2.Span;
 import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.kafka11.KafkaSender;
+import zipkin2.reporter.Sender;
 
 public class HelloService extends Application<HelloServiceConfiguration> {
 
@@ -29,8 +31,7 @@ public class HelloService extends Application<HelloServiceConfiguration> {
 	@Override
 	public void run(HelloServiceConfiguration configuration, Environment environment) {
 		/* START TRACING INSTRUMENTATION */
-		final KafkaSender sender = KafkaSender.newBuilder()
-				.bootstrapServers(configuration.getKafkaBootstrapServers()).build();
+		final Sender sender = TracingHelper.sender(ConfigFactory.load());
 		final AsyncReporter<Span> reporter = AsyncReporter.builder(sender).build();
 		final Tracing tracing = Tracing.newBuilder().localServiceName("hello-service")
 				.sampler(Sampler.ALWAYS_SAMPLE).spanReporter(reporter).build();

@@ -8,6 +8,7 @@ import brave.kafka.clients.KafkaTracing;
 import brave.sampler.Sampler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import io.github.jeqo.poc.tracing.TracingHelper;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -18,9 +19,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import zipkin2.Span;
 import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.kafka11.KafkaSender;
+import zipkin2.reporter.Sender;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -29,14 +29,12 @@ import static org.apache.kafka.clients.producer.ProducerConfig.*;
 
 public class HelloClient {
 
-	public static void main(String[] args) throws InterruptedException, IOException {
+	public static void main(String[] args) throws Exception {
 
 		final Config config = ConfigFactory.load();
-		final String kafkaBootstrapServers = config.getString("kafka.bootstrap-servers");
 
 		/* START TRACING INSTRUMENTATION */
-		final KafkaSender sender = KafkaSender.newBuilder()
-				.bootstrapServers(kafkaBootstrapServers).build();
+		final Sender sender = TracingHelper.sender(config);
 		final AsyncReporter<Span> reporter = AsyncReporter.builder(sender).build();
 		final Tracing tracing = Tracing.newBuilder().localServiceName("hello-client")
 				.sampler(Sampler.ALWAYS_SAMPLE).spanReporter(reporter).build();
@@ -49,6 +47,7 @@ public class HelloClient {
 		final HttpClient httpClient = TracingHttpClientBuilder.create(httpTracing)
 				.build();
 
+		final String kafkaBootstrapServers = config.getString("kafka.bootstrap-servers");
 		final Properties producerConfigs = new Properties();
 		producerConfigs.setProperty(BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
 		producerConfigs.setProperty(KEY_SERIALIZER_CLASS_CONFIG,

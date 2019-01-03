@@ -3,11 +3,11 @@ all: clone-submodule format build
 
 .PHONY: format
 format:
-	sh mvnw spring-javaformat:apply
+	./mvnw spring-javaformat:apply
 
 .PHONY: build
 build: ## build java applications
-	sh mvnw clean install
+	./mvnw clean install
 
 .PHONY: start
 start: ## start docker-compose environment

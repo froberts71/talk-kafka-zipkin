@@ -5,11 +5,12 @@ import brave.kafka.clients.KafkaTracing;
 import brave.sampler.Sampler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import io.github.jeqo.poc.tracing.TracingHelper;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import zipkin2.Span;
 import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.kafka11.KafkaSender;
+import zipkin2.reporter.Sender;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -23,9 +24,7 @@ public class HelloConsumer {
 
 		final Config config = ConfigFactory.load();
 		/* START TRACING INSTRUMENTATION */
-		final String kafkaBootstrapServers = config.getString("kafka.bootstrap-servers");
-		final KafkaSender sender = KafkaSender.newBuilder()
-				.bootstrapServers(kafkaBootstrapServers).build();
+		final Sender sender = TracingHelper.sender(config);
 		final AsyncReporter<Span> reporter = AsyncReporter.builder(sender).build();
 		final Tracing tracing = Tracing.newBuilder().localServiceName("hello-consumer")
 				.sampler(Sampler.ALWAYS_SAMPLE).spanReporter(reporter).build();
@@ -33,6 +32,7 @@ public class HelloConsumer {
 				.remoteServiceName("kafka").build();
 		/* END TRACING INSTRUMENTATION */
 
+		final String kafkaBootstrapServers = config.getString("kafka.bootstrap-servers");
 		final Properties consumerConfigs = new Properties();
 		consumerConfigs.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
 				kafkaBootstrapServers);
